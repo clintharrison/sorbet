@@ -15,8 +15,10 @@ public:
     template <typename T> static void writeVName(rapidjson::Writer<T> &writer, const VName &node) {
         writer.StartObject();
 
-        writer.String("signature");
-        writer.String(node.getSignature().data());
+        if (!node.getSignature().empty()) {
+            writer.String("signature");
+            writer.String(node.getSignature().data());
+        }
 
         if (!node.getPath().empty()) {
             writer.String("path");

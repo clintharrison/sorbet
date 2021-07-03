@@ -62,6 +62,14 @@ void Indexer::writeFileNodeJson(const core::GlobalState &gs, ast::ParsedFile &pf
         KytheJsonWriter::writeFact(writer, semanticVName, "subkind", pr.first.showKind(gs));
         writer.Reset(osw);
         osw.Put('\n');
+
+        if (!klass->owner.isSynthetic()) {
+            auto ownerClass = klass->owner.asClassOrModuleRef();
+            auto enclosingClassVName = finder.vnameForClass[ownerClass];
+            KytheJsonWriter::writeEdge(writer, semanticVName, "childof", enclosingClassVName);
+            writer.Reset(osw);
+            osw.Put('\n');
+        }
     }
 
     for (auto &&pr : finder.vnameForMethod) {
@@ -105,11 +113,14 @@ void Indexer::writeFileNodeJson(const core::GlobalState &gs, ast::ParsedFile &pf
         writer.Reset(osw);
         osw.Put('\n');
 
-        auto kls = method->owner.asClassOrModuleRef();
-        auto enclosingClassVName = finder.vnameForClass[kls];
-        KytheJsonWriter::writeEdge(writer, semanticVName, "childof", enclosingClassVName);
-        writer.Reset(osw);
-        osw.Put('\n');
+        // owner class for this method might be synthetic if it's a bare top level method
+        if (!method->owner.isSynthetic()) {
+            auto kls = method->owner.asClassOrModuleRef();
+            auto enclosingClassVName = finder.vnameForClass[kls];
+            KytheJsonWriter::writeEdge(writer, semanticVName, "childof", enclosingClassVName);
+            writer.Reset(osw);
+            osw.Put('\n');
+        }
     }
 
     KytheJsonWriter::writeFact(writer, fileVName, "node/kind", "file");
