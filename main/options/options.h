@@ -80,6 +80,7 @@ struct Printers {
     PrinterConfig AutogenAutoloader;
     PrinterConfig AutogenSubclasses;
     PrinterConfig Packager;
+    PrinterConfig KytheJson;
     // Ensure everything here is in PrinterConfig::printers().
 
     std::vector<std::reference_wrapper<PrinterConfig>> printers();
@@ -222,6 +223,8 @@ struct Options {
 
     // Experimental feature `requires_ancestor`
     bool requiresAncestorEnabled = false;
+
+    std::string kytheCorpus;
 
     std::string inlineInput; // passed via -e
     std::string debugLogFile;

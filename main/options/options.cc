@@ -70,6 +70,7 @@ const vector<PrintOptions> print_options({
     {"autogen-autoloader", &Printers::AutogenAutoloader, true, false},
     {"autogen-subclasses", &Printers::AutogenSubclasses, true},
     {"package-tree", &Printers::Packager},
+    {"kythe-json", &Printers::KytheJson},
 });
 
 PrinterConfig::PrinterConfig() : state(make_shared<GuardedState>()){};
@@ -135,6 +136,7 @@ vector<reference_wrapper<PrinterConfig>> Printers::printers() {
         AutogenAutoloader,
         AutogenSubclasses,
         Packager,
+        KytheJson,
     });
 }
 
@@ -378,6 +380,8 @@ buildOptions(const vector<pipeline::semantic_extension::SemanticExtensionProvide
     options.add_options("advanced")("ruby3-keyword-args", "Enforce use of new (Ruby 3.0-style) keyword arguments",
                                     cxxopts::value<bool>());
 
+    options.add_options("advanced")("experimental-kythe-corpus", "Kythe corpus name",
+                                    cxxopts::value<string>()->default_value(""));
     // Developer options
     options.add_options("dev")("p,print", to_string(all_prints), cxxopts::value<vector<string>>(), "type");
     options.add_options("dev")("autogen-subclasses-parent",
@@ -726,6 +730,7 @@ void readOptions(Options &opts,
             throw EarlyReturnWithCode(1);
         }
 
+        opts.kytheCorpus = raw["experimental-kythe-corpus"].as<string>();
         opts.runLSP = raw["lsp"].as<bool>();
         opts.disableWatchman = raw["disable-watchman"].as<bool>();
         opts.watchmanPath = raw["watchman-path"].as<string>();

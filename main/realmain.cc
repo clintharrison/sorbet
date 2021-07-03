@@ -12,6 +12,7 @@
 #include "main/autogen/crc_builder.h"
 #include "main/autogen/packages.h"
 #include "main/autogen/subclasses.h"
+#include "main/kythe/Indexer.h"
 #include "main/lsp/LSPInput.h"
 #include "main/lsp/LSPOutput.h"
 #include "main/lsp/lsp.h"
@@ -356,6 +357,15 @@ void runAutogen(const core::GlobalState &gs, options::Options &opts, const autog
 }
 #endif
 
+#ifndef SORBET_REALMAIN_MIN
+void runKytheIndexer(const core::GlobalState &gs, options::Options &opts, vector<ast::ParsedFile> &indexed,
+                     std::ostream &out) {
+    for (auto &&pf : indexed) {
+        kythe::Indexer::writeFileNodeJson(gs, pf, opts.kytheCorpus, std::cout);
+    }
+}
+#endif
+
 int realmain(int argc, char *argv[]) {
 #ifndef SORBET_REALMAIN_MIN
     absl::InitializeSymbolizer(argv[0]);
@@ -593,6 +603,15 @@ int realmain(int argc, char *argv[]) {
             if (gs->hadCriticalError()) {
                 gs->errorQueue->flushAllErrors(*gs);
             }
+        }
+
+        if (opts.print.KytheJson.enabled) {
+#ifdef SORBET_REALMAIN_MIN
+            logger->warn("printing kythe-json is disabled in sorbet-orig for faster builds");
+            return 1;
+#else
+            runKytheIndexer(*gs, opts, indexed, std::cout);
+#endif
         }
 
         if (opts.suggestTyped) {

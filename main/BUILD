@@ -72,6 +72,7 @@ cc_library(
         "//hashing",
         "//main/autogen",
         "//main/cache",
+        "//main/kythe",
         "//main/lsp",
         "//main/options",
         "//main/pipeline",

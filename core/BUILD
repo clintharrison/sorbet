@@ -18,7 +18,12 @@ cc_library(
     hdrs = [
         "GlobalSubstitution.h",
         "core.h",
-    ] + glob(["errors/*.h"]) + glob(["lsp/*.h"]),
+    ] + glob(
+        [
+            "errors/*.h",
+            "lsp/*.h",
+        ]
+    ),
     linkstatic = select({
         "//tools/config:linkshared": 0,
         "//conditions:default": 1,
@@ -32,6 +37,7 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@rang",
+        "@rapidjson",
     ],
 )
 
