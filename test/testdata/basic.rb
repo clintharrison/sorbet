@@ -1,37 +1,16 @@
 # typed: true
 # frozen_string_literal: true
 
-def greet(name)
-  "hello #{name}"
-end
+#- @"class E" defines EClass
+#- EClass?.node/kind record
+#- EClass.subkind class
+class E; end
 
-def greets
-  greet 'Sorbet'
-  greet <<~GREETING
-    world
-  GREETING
-end
+#- @"module B" defines BModule
+#- BModule?.node/kind record
+#- BModule.subkind module
+module B; end
 
-greets
-
-class Zombie
-  def foo(param); end
-
-  def bar(zzz); end
-end
-
-module M; end
-
-module Home
-  extend T::Sig
-  extend T::Helpers
-
-  include M
-end
-
-module Kitchen
-  class Fruit; end
-  class Banana < Fruit; end
-  class Berry < Fruit; end
-  class Apple < Berry; end
-end
+#- @"def bark" defines/binding Bark
+#- Bark?.node/kind function
+def bark; end
