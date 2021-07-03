@@ -22,7 +22,7 @@ cc_library(
         [
             "errors/*.h",
             "lsp/*.h",
-        ]
+        ],
     ),
     linkstatic = select({
         "//tools/config:linkshared": 0,

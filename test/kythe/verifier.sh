@@ -3,7 +3,7 @@
 set -eo pipefail
 
 # TODO: don't use this path lol
-KYTHE_TOOLS_BASE="${HOME}/.kythe_binaries/kythe-v0.0.52/tools"
+KYTHE_TOOLS_BASE="${HOME}/bin"
 ENTRYSTREAM="${KYTHE_TOOLS_BASE}/entrystream"
 VERIFIER="${KYTHE_TOOLS_BASE}/verifier"
 

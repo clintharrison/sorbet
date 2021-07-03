@@ -4,11 +4,11 @@ cc_library(
     name = "kythe",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.h"]),
+    visibility = ["//main:__pkg__"],
     deps = [
-        "//core",
         "//ast",
         "//ast/treemap",
+        "//core",
         "@rapidjson",
     ],
-    visibility = ["//main:__pkg__"],
 )
