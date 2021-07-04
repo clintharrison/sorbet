@@ -12,7 +12,8 @@ namespace sorbet::realmain::kythe {
 
 class KytheJsonWriter {
 public:
-    template <typename T> static void writeVName(rapidjson::Writer<T> &writer, const VName &node) {
+    // a vname is always a partial write; we never write *just* the vname
+    template <typename T> static void writeVName(T &writer, const VName &node) {
         writer.StartObject();
 
         if (!node.getSignature().empty()) {
@@ -43,9 +44,9 @@ public:
         writer.EndObject();
     }
 
-    template <typename T>
-    static void writeFact(rapidjson::Writer<T> &writer, const VName &node, const std::string_view &fact_name,
+    static void writeFact(rapidjson::OStreamWrapper &ostream, const VName &node, const std::string_view &fact_name,
                           const std::string_view &fact_val) {
+        rapidjson::Writer writer{ostream};
         writer.StartObject();
 
         writer.String("source");
@@ -58,11 +59,12 @@ public:
         writer.String(absl::Base64Escape(fact_val));
 
         writer.EndObject();
+        ostream.Put('\n');
     }
 
-    template <typename T>
-    static void writeEdge(rapidjson::Writer<T> &writer, const VName &source, const std::string &edge_name,
+    static void writeEdge(rapidjson::OStreamWrapper &ostream, const VName &source, const std::string &edge_name,
                           const VName &target) {
+        rapidjson::Writer writer{ostream};
         writer.StartObject();
 
         writer.String("source");
@@ -78,18 +80,19 @@ public:
         writer.String("/");
 
         writer.EndObject();
+        ostream.Put('\n');
     }
 
-    template <typename T>
-    static void writeOrdinalEdge(rapidjson::Writer<T> writer, const VName &source, const std::string &edge_name,
+    static void writeOrdinalEdge(rapidjson::OStreamWrapper &ostream, const VName &source, const std::string &edge_name,
                                  const VName &target, unsigned int ordinal) {
+        rapidjson::Writer writer{ostream};
         writer.StartObject();
 
         writer.String("source");
         writeVName(writer, source);
 
         writer.String("edge_kind");
-        writer.String(fmt::format("/kythe/edge/{}.{}"), edge_name, ordinal);
+        writer.String(fmt::format("/kythe/edge/{}.{}", edge_name, ordinal));
 
         writer.String("target");
         writeVName(writer, target);
@@ -98,6 +101,7 @@ public:
         writer.String("/");
 
         writer.EndObject();
+        ostream.Put('\n');
     }
 
     static VName vnameForAnchor(VName fileVName, uint begin, uint end) {

@@ -7,19 +7,20 @@
 
 namespace sorbet::realmain::kythe {
 
+// TODO: rename this from "RecordFinder" to something more general.
+// We can print as soon as possible in the visitor functions, and process
+// methods (and their children--refs I guess?) too. So, this is more than
+// just records, and it does more than just Find, it also prints.
 class RecordFinder {
-    // TODO: can we use a vector instead of this map
-    VName toVName(const core::GlobalState &gs, core::FileRef file, ast::ClassDef &classOrModule);
-    VName toVName(const core::GlobalState &gs, core::FileRef file, ast::MethodDef &classOrModule);
+    std::ostream &output_stream;
+    VName fileVName;
+
+    VName toVName(const core::GlobalState &gs, core::SymbolRef symbol);
 
 public:
-    RecordFinder(const core::GlobalState &gs);
-
+    RecordFinder(const core::GlobalState &gs, std::ostream &output_stream, VName fileVName);
     ast::ExpressionPtr postTransformClassDef(core::Context ctx, ast::ExpressionPtr expr);
     ast::ExpressionPtr postTransformMethodDef(core::Context ctx, ast::ExpressionPtr expr);
-
-    UnorderedMap<core::ClassOrModuleRef, VName> vnameForClass;
-    UnorderedMap<core::MethodRef, VName> vnameForMethod;
 };
 
 } // namespace sorbet::realmain::kythe

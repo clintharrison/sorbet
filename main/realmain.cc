@@ -361,7 +361,7 @@ void runAutogen(const core::GlobalState &gs, options::Options &opts, const autog
 void runKytheIndexer(const core::GlobalState &gs, options::Options &opts, vector<ast::ParsedFile> &indexed,
                      std::ostream &out) {
     for (auto &&pf : indexed) {
-        kythe::Indexer::writeFileNodeJson(gs, pf, opts.kytheCorpus, std::cout);
+        kythe::Indexer::indexOneFile(gs, pf, opts.kytheCorpus, std::cout);
     }
 }
 #endif

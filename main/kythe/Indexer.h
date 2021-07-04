@@ -9,10 +9,8 @@ namespace sorbet::realmain::kythe {
 
 class Indexer final {
 public:
-    static void writeFileNodeJson(const core::GlobalState &gs, ast::ParsedFile &pf, std::string_view corpus,
-                                  std::ostream &out);
-
-private:
+    static void indexOneFile(const core::GlobalState &gs, ast::ParsedFile &pf, std::string_view corpus,
+                             std::ostream &out);
 };
 
 } // namespace sorbet::realmain::kythe
