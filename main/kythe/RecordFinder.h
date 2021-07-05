@@ -16,11 +16,16 @@ class RecordFinder {
     VName fileVName;
 
     VName toVName(const core::GlobalState &gs, core::SymbolRef symbol);
+    VName toVName(const core::GlobalState &gs, core::LocalVariable local, std::string path);
+    VName toVName(const core::GlobalState &gs, ast::Send &send);
 
 public:
     RecordFinder(const core::GlobalState &gs, std::ostream &output_stream, VName fileVName);
     ast::ExpressionPtr postTransformClassDef(core::Context ctx, ast::ExpressionPtr expr);
     ast::ExpressionPtr postTransformMethodDef(core::Context ctx, ast::ExpressionPtr expr);
+    ast::ExpressionPtr postTransformConstantLit(core::Context ctx, ast::ExpressionPtr expr);
+    ast::ExpressionPtr postTransformAssign(core::Context ctx, ast::ExpressionPtr expr);
+    ast::ExpressionPtr postTransformSend(core::Context ctx, ast::ExpressionPtr expr);
 };
 
 } // namespace sorbet::realmain::kythe

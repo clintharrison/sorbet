@@ -1,4 +1,5 @@
 #include "main/kythe/RecordFinder.h"
+#include "ast/Helpers.h"
 #include "core/Names.h"
 #include "main/kythe/KytheJsonWriter.h"
 #include "rapidjson/ostreamwrapper.h"
@@ -33,10 +34,57 @@ void writeNodeForDefines(const core::GlobalState &gs, OStreamWrapper &osw, core:
     }
 }
 
+core::SymbolRef findMethodInHierarchy(const core::GlobalState &gs, core::ClassOrModuleRef klass, core::NameRef name) {
+    auto concreteMethodSymbol = klass.data(gs)->findConcreteMethodTransitive(gs, name);
+    if (concreteMethodSymbol.exists()) {
+        return concreteMethodSymbol;
+    }
+
+    // if we didn't find it on the class... check the singleton???? this doesn't make sense but i dont know how to do
+    // this correctly
+    return findMethodInHierarchy(gs, klass.data(gs)->lookupSingletonClass(gs), name);
+}
+
+core::SymbolRef symbolRefForSendTarget(core::Context ctx, ast::Send &send) {
+    const auto &gs = ctx.state;
+    core::SymbolRef ret;
+    auto &recv = send.recv;
+
+    typecase(
+        recv,
+        [&](const ast::ConstantLit &cl) {
+            if (cl.symbol == core::Symbols::Magic()) {
+                return;
+            }
+            if (!cl.original) {
+                return;
+            }
+
+            if (cl.symbol.isClassOrModule()) {
+                ret = findMethodInHierarchy(gs, cl.symbol.asClassOrModuleRef(), send.fun);
+            }
+        },
+        [&](const ast::Local &lcl) {
+            // How do we find the original definition from a Local??
+        },
+        [&](const ast::ExpressionPtr &expr) { fmt::print("UNKNOWN EXPR: {}\n", expr.toString(gs)); });
+    return ret;
+}
+
+VName RecordFinder::toVName(const core::GlobalState &gs, core::LocalVariable local, string owner) {
+    auto signature = local.exportableName(gs);
+    auto path = owner;
+    auto language = "";
+    auto root = "";
+    auto corpus = "";
+
+    return VName{signature, path, language, root, corpus};
+}
+
 VName RecordFinder::toVName(const core::GlobalState &gs, core::SymbolRef symbol) {
     auto data = symbol.data(gs);
 
-    auto name = data->name.show(gs);
+    auto name = symbol.show(gs);
     string owner;
 
     if (symbol.isClassOrModule()) {
@@ -114,7 +162,58 @@ ast::ExpressionPtr RecordFinder::postTransformMethodDef(core::Context ctx, ast::
         KytheJsonWriter::writeEdge(osw, nodeVName, "childof", ownerVName);
     }
 
-    // todo write type edges
+    // // write method args' nodes
+    // for (auto &arg : methodDef.args) {
+    //     // skip args without a loc? e.g. the implicit block arg?
+    //     if (!arg.loc().exists()) {
+    //         continue;
+    //     }
+    //     anchor = writeAnchor(gs, osw, arg.loc(), fileVName);
+    //     auto local = ast::MK::arg2Local(arg);
+    //     auto path = methodDef.symbol.showFullName(gs);
+    //     nodeVName = toVName(gs, local->localVariable, path);
+    //     writeNodeForDefines(gs, osw, loc, nodeVName, anchor, "variable", "local/parameter");
+    // }
+
+    // TODO: write type edges
+
+    return expr;
+}
+
+ast::ExpressionPtr RecordFinder::postTransformConstantLit(core::Context ctx, ast::ExpressionPtr expr) {
+    // auto &constant = ast::cast_tree_nonnull<ast::ConstantLit>(expr);
+
+    // const auto &gs = ctx.state;
+
+    // fmt::print("postTransformAssign on expr {}\n", expr.toString(gs));
+    return expr;
+}
+
+ast::ExpressionPtr RecordFinder::postTransformAssign(core::Context ctx, ast::ExpressionPtr expr) {
+    // auto &assign = ast::cast_tree_nonnull<ast::Assign>(expr);
+    // auto *local = ast::cast_tree<ast::Local>(assign.lhs);
+
+    // const auto &gs = ctx.state;
+
+    // fmt::print("postTransformAssign on expr {}\n", expr.toString(gs));
+    return expr;
+}
+
+ast::ExpressionPtr RecordFinder::postTransformSend(core::Context ctx, ast::ExpressionPtr expr) {
+    auto &send = ast::cast_tree_nonnull<ast::Send>(expr);
+    const auto &gs = ctx.state;
+
+    if (!send.loc.exists()) {
+        return expr;
+    }
+
+    rapidjson::OStreamWrapper osw{output_stream};
+    auto anchor = writeAnchor(gs, osw, send.loc, fileVName);
+    auto sendTarget = symbolRefForSendTarget(ctx, send);
+    if (sendTarget.exists()) {
+        auto target = toVName(gs, sendTarget);
+        KytheJsonWriter::writeEdge(osw, anchor, "ref/call", target);
+    }
 
     return expr;
 }
