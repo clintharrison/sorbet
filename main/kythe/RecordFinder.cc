@@ -156,24 +156,25 @@ ast::ExpressionPtr RecordFinder::postTransformMethodDef(core::Context ctx, ast::
     auto subkind = methodDef.symbol.showKind(gs);
     writeNodeForDefines(gs, osw, loc, nodeVName, anchor, node_kind, subkind);
 
-    auto ownerSym = methodDef.symbol.data(gs)->owner;
-    if (ownerSym != core::Symbols::root()) {
-        auto ownerVName = toVName(gs, ownerSym);
-        KytheJsonWriter::writeEdge(osw, nodeVName, "childof", ownerVName);
-    }
+    // Hmm, this does the wrong thing when we have an owner that gets printed as `T.class_of(Foo)`
+    // auto ownerSym = methodDef.symbol.data(gs)->owner;
+    // if (ownerSym != core::Symbols::root()) {
+    //     auto ownerVName = toVName(gs, ownerSym);
+    //     KytheJsonWriter::writeEdge(osw, nodeVName, "childof", ownerVName);
+    // }
 
-    // write method args' nodes
-    for (auto &arg : methodDef.args) {
-        // skip args without a loc? e.g. the implicit block arg?
-        if (!arg.loc().exists()) {
-            continue;
-        }
-        anchor = writeAnchor(gs, osw, arg.loc(), fileVName);
-        auto local = ast::MK::arg2Local(arg);
-        auto path = methodDef.symbol.showFullName(gs);
-        nodeVName = toVName(gs, local->localVariable, path);
-        writeNodeForDefines(gs, osw, loc, nodeVName, anchor, "variable", "local/parameter");
-    }
+    // // write method args' nodes: this currently doesn't work right, and its not useful lol
+    // for (auto &arg : methodDef.args) {
+    //     // skip args without a loc? e.g. the implicit block arg?
+    //     if (!arg.loc().exists()) {
+    //         continue;
+    //     }
+    //     anchor = writeAnchor(gs, osw, arg.loc(), fileVName);
+    //     auto local = ast::MK::arg2Local(arg);
+    //     auto path = methodDef.symbol.showFullName(gs);
+    //     nodeVName = toVName(gs, local->localVariable, path);
+    //     writeNodeForDefines(gs, osw, loc, nodeVName, anchor, "variable", "local/parameter");
+    // }
 
     // TODO: write type edges
 
@@ -208,10 +209,9 @@ ast::ExpressionPtr RecordFinder::postTransformSend(core::Context ctx, ast::Expre
     }
 
     rapidjson::OStreamWrapper osw{output_stream};
-    // don't _emit_ an anchor here! it gets emitted by postTransformMethodDef
-    auto anchor = KytheJsonWriter::vnameForAnchor(fileVName, send.loc.beginPos(), send.loc.endPos());
     auto sendTarget = symbolRefForSendTarget(ctx, send);
     if (sendTarget.exists()) {
+        auto anchor = writeAnchor(gs, osw, send.loc, fileVName);
         auto target = toVName(gs, sendTarget);
         KytheJsonWriter::writeEdge(osw, anchor, "ref/call", target);
     }
