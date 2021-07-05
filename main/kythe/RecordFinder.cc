@@ -66,6 +66,15 @@ core::SymbolRef symbolRefForSendTarget(core::Context ctx, ast::Send &send) {
         },
         [&](const ast::Local &lcl) {
             // How do we find the original definition from a Local??
+            if (lcl.localVariable._name == core::Names::selfLocal()) {
+                if (ctx.owner.isMethod()) {
+                    auto classOwner = ctx.owner.asMethodRef().enclosingClass(gs);
+                    ret = findMethodInHierarchy(gs, classOwner, send.fun);
+                }
+            }
+            if (ctx.owner.isClassOrModule()) {
+                ret = findMethodInHierarchy(gs, ctx.owner.asClassOrModuleRef(), send.fun);
+            }
         },
         [&](const ast::ExpressionPtr &expr) { fmt::print("UNKNOWN EXPR: {}\n", expr.toString(gs)); });
     return ret;
