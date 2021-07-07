@@ -29,6 +29,7 @@ cc_library(
         "//infer",
         "//local_vars",
         "//main/options",
+        "//main/lsif",
         "//namer",
         "//packager",
         "//parser",
