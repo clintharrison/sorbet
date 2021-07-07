@@ -19,7 +19,7 @@ public:
     int emitResultSet();
     int emitDefinitionResult();
     int emitNext(int outV, int inV);
-    int emitRange(LsifPosition start, LsifPosition end);
+    int emitRange(sorbet::core::Loc::Detail start, sorbet::core::Loc::Detail end);
     int emitDocument(std::string_view language, std::string_view uri);
     int emitProject(std::string_view language);
     int emitContains(int outV, std::vector<int> &inVs);

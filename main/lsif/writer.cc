@@ -17,7 +17,9 @@ int Writer::emitNext(int outV, int inV) {
     writer.String("id");
     writer.Int(id);
     writer.String("type");
-    writer.String("vertex");
+    writer.String("edge");
+    writer.String("label");
+    writer.String("next");
     writer.String("outV");
     writer.Int(outV);
     writer.String("inV");
@@ -119,7 +121,7 @@ int Writer::emitProject(std::string_view language) {
     return id;
 }
 
-int Writer::emitRange(LsifPosition start, LsifPosition end) {
+int Writer::emitRange(sorbet::core::Loc::Detail start, sorbet::core::Loc::Detail end) {
     rapidjson::OStreamWrapper osw{outputStream};
     auto id = nextId++;
     rapidjson::Writer writer{osw};
@@ -137,17 +139,17 @@ int Writer::emitRange(LsifPosition start, LsifPosition end) {
     writer.String("start");
     writer.StartObject();
     writer.String("line");
-    writer.Int(start.line);
+    writer.Int(start.line - 1);
     writer.String("character");
-    writer.Int(start.character);
+    writer.Int(start.column - 1);
     writer.EndObject();
 
     writer.String("end");
     writer.StartObject();
     writer.String("line");
-    writer.Int(end.line);
+    writer.Int(end.line - 1);
     writer.String("character");
-    writer.Int(end.character);
+    writer.Int(end.column - 1);
     writer.EndObject();
 
     writer.EndObject();
