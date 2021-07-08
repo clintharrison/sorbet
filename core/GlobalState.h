@@ -7,6 +7,7 @@
 #include "core/Loc.h"
 #include "core/Names.h"
 #include "core/Symbols.h"
+#include "core/lsif/writer.h"
 #include "core/lsp/Query.h"
 #include "main/pipeline/semantic_extension/SemanticExtension.h"
 #include <memory>
@@ -266,6 +267,8 @@ public:
     std::vector<std::unique_ptr<pipeline::semantic_extension::SemanticExtension>> semanticExtensions;
 
     bool requiresAncestorEnabled = false;
+
+    std::unique_ptr<sorbet::core::lsif::Writer> lsifWriter;
 
 private:
     bool shouldReportErrorOn(Loc loc, ErrorClass what) const;

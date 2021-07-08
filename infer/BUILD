@@ -21,6 +21,7 @@ cc_library(
         "//cfg",
         "//common",
         "//core",
+        "//main/lsif",
         "@com_google_absl//absl/types:optional",
     ],
 )

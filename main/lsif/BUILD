@@ -4,12 +4,10 @@ cc_library(
     name = "lsif",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.h"]),
-    visibility = ["//main:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
-        "@rapidjson",
-        "//core",
         "//ast",
-        "//ast/treemap",
-        "//core/proto",
+        "//core",
+        "@rapidjson",
     ],
 )

@@ -5,7 +5,7 @@
 #include "core/proto/proto.h"
 // ^^ has to go first
 #include "common/json2msgpack/json2msgpack.h"
-#include "main/lsif/lsif_indexer.h"
+#include "main/lsif/Indexer.h"
 #include "packager/packager.h"
 #include <sstream>
 #endif
@@ -63,6 +63,11 @@ public:
         if (opts.stopAfterPhase == options::Phase::CFG) {
             return tree;
         }
+#ifndef SORBET_REALMAIN_MIN
+        if (ctx.state.lsifWriter) {
+            sorbet::realmain::lsif::Indexer::emitForMethodDef(ctx, tree);
+        }
+#endif
         cfg = infer::Inference::run(ctx.withOwner(cfg->symbol), move(cfg));
         if (cfg) {
             for (auto &extension : ctx.state.semanticExtensions) {
@@ -911,15 +916,6 @@ ast::ParsedFilesOrCancelled typecheck(unique_ptr<core::GlobalState> &gs, vector<
         }
 
 #ifndef SORBET_REALMAIN_MIN
-        if (opts.print.LSIF.enabled) {
-            if (opts.print.LSIF.outputPath.empty()) {
-                lsif::LSIFIndexer::emitIndex(*gs, typecheck_result, cout);
-            } else {
-                stringstream buf;
-                lsif::LSIFIndexer::emitIndex(*gs, typecheck_result, buf);
-                opts.print.LSIF.print(buf.str());
-            }
-        }
         if (opts.print.SymbolTableJson.enabled) {
             auto root = core::Proto::toProto(*gs, core::Symbols::root(), false);
             if (opts.print.SymbolTableJson.outputPath.empty()) {

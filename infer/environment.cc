@@ -6,6 +6,10 @@
 #include "core/TypeDrivenAutocorrect.h"
 #include <algorithm> // find, remove_if
 
+#ifndef SORBET_REALMAIN_MIN
+#include "main/lsif/Indexer.h"
+#endif
+
 template struct std::pair<sorbet::core::LocalVariable, std::shared_ptr<sorbet::core::Type>>;
 
 using namespace std;
@@ -1012,6 +1016,12 @@ core::TypePtr Environment::processBinding(core::Context ctx, const cfg::CFG &inW
                                                      send->isPrivateOk, ctx.owner.asMethodRef(),
                                                      core::Loc(ctx.file, send->receiverLoc), send->args.size()));
                 }
+#ifndef SORBET_REALMAIN_MIN
+                if (ctx.state.lsifWriter) {
+                    // lay. zeee.
+                    sorbet::realmain::lsif::Indexer::emitForSend(ctx, bind.loc, retainedResult, send->fun);
+                }
+#endif
                 if (send->link) {
                     // This should eventually become ENFORCEs but currently they are wrong
                     if (!retainedResult->main.blockReturnType) {
@@ -1036,6 +1046,13 @@ core::TypePtr Environment::processBinding(core::Context ctx, const cfg::CFG &inW
                         ctx, core::lsp::IdentResponse(core::Loc(ctx.file, bind.loc), i->what.data(inWhat), tp,
                                                       ctx.owner.asMethodRef()));
                 }
+#ifndef SORBET_REALMAIN_MIN
+            // if (ctx.state.lsifWriter && !bind.value->isSynthetic) {
+            //     ctx.state.lsifWriter->emitForLSPQueryResponse(
+            //         ctx, core::lsp::IdentResponse(core::Loc(ctx.file, bind.loc), i->what.data(inWhat), tp,
+            //                                       ctx.owner.asMethodRef()));
+            // }
+#endif
 
                 ENFORCE(ctx.file.data(ctx).hasParseErrors || !tp.origins.empty(), "Inferencer did not assign location");
             },
