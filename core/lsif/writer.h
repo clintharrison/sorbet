@@ -55,8 +55,10 @@ class Writer {
     int emitContains(int id, int outV, const std::vector<int> &inVs);
     int emitMetaData(int id, std::string_view version, std::string_view projectRoot, std::string_view toolName);
     int emitEdge(int id, std::string_view label, int outV, int inV);
-    int emitItemEdge(int id, int outV, const std::vector<int> &inVs, int document, std::string_view property);
+    int emitItemEdge(int id, int outV, const std::vector<int> &inVs, int shard, std::string_view property);
     int emitHoverResult(int id, std::string_view kind, std::string_view value);
+    int emitGroup(int id, std::string_view uri, std::string_view conflictResolution, std::string_view name,
+                  std::string_view rootUri);
 
 public:
     Writer();
@@ -72,10 +74,12 @@ public:
     int emitProject(std::string_view language);
     int emitContains(int outV, const std::vector<int> &inVs);
     int emitMetaData(std::string_view version, std::string_view projectRoot, std::string_view toolName);
-    int emitItemEdge(int outV, const std::vector<int> &inVs, int document, std::string_view property = {});
-    int emitItemEdge(int outV, int inV, int document, std::string_view property = {});
+    int emitItemEdge(int outV, const std::vector<int> &inVs, int shard, std::string_view property = {});
+    int emitItemEdge(int outV, int inV, int shard, std::string_view property = {});
     int emitEdge(std::string_view label, int outV, int inV);
     int emitHoverResult(std::string_view kind, std::string_view value);
+    int emitGroup(std::string_view uri, std::string_view conflictResolution, std::string_view name,
+                  std::string_view rootUri);
 };
 } // namespace sorbet::core::lsif
 

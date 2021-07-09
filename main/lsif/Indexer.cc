@@ -6,7 +6,7 @@ void Indexer::emitForDocumentBegin(core::Context ctx, core::FileRef file) {
     const auto &gs = ctx.state;
     // this is gross, but we need to modify the state now :(
     absl::MutexLock lock{&gs.lsifWriter->outputLock};
-    auto id = gs.lsifWriter->emitDocument("ruby", fmt::format("file://./{}", file.data(gs).path()));
+    auto id = gs.lsifWriter->emitDocument("ruby", fmt::format("file:///{}", file.data(gs).path()));
     auto docInfo = std::make_unique<core::lsif::DocumentInfo>(id);
     gs.lsifWriter->documentInfoForFile.emplace(ctx.file, std::move(docInfo));
 }
@@ -97,15 +97,22 @@ void Indexer::emitForSend(core::Context ctx, sorbet::core::LocOffsets loc,
 }
 
 void Indexer::emitForProjectBegin(const core::GlobalState &gs) {
-    // honestly not sure if this is 0.4.0, 0.4.3, or 0.5.0(?) of the LSIF spec.
     ENFORCE(gs.lsifWriter);
     // this is gross, but we need to modify the state now :(
     absl::MutexLock lock{&gs.lsifWriter->outputLock};
-    auto metaDataId = gs.lsifWriter->emitMetaData("0.4.3", "file://.", "sorbet");
+    // honestly not sure if this is 0.4.0, 0.4.3, or 0.5.0(?) of the LSIF spec.
+    // going with the version of lsif-sqlite!
+    auto metaDataId = gs.lsifWriter->emitMetaData("0.5.3", "file:///", "sorbet");
     ENFORCE(metaDataId == 1);
 
+    // TODO: stop hardcoding these: uri, conflict resolution, project name, root URI
+    auto groupId = gs.lsifWriter->emitGroup("file:///", "takeDB", "<TODO NAME>", "file:///");
+    ENFORCE(groupId == 2)
+
     auto projectId = gs.lsifWriter->emitProject("ruby");
-    ENFORCE(projectId == 2);
+    ENFORCE(projectId == 3);
+
+    gs.lsifWriter->emitEdge("belongsTo", projectId, groupId);
 }
 
 void Indexer::emitForProjectEnd(const core::GlobalState &gs) {
@@ -151,10 +158,10 @@ void Indexer::emitForProjectEnd(const core::GlobalState &gs) {
     std::vector<int> documentIds;
     std::transform(writer.documentInfoForFile.begin(), writer.documentInfoForFile.end(),
                    std::back_inserter(documentIds), [&](const auto &pair) { return pair.second->documentId; });
-    // TODO: don't hardcode "2" here -- it's the special Project vertex,
+    // TODO: don't hardcode "3" here -- it's the special Project vertex,
     // but eventually we might want more than one?
     // There might be a better way to shard than by "project" though
-    writer.emitContains(2, documentIds);
+    writer.emitContains(3, documentIds);
 }
 
 } // namespace sorbet::realmain::lsif

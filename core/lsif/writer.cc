@@ -49,16 +49,21 @@ int Writer::emitMetaData(std::string_view version, std::string_view projectRoot,
     return emitMetaData(nextId++, version, projectRoot, toolName);
 }
 
-int Writer::emitItemEdge(int outV, const std::vector<int> &inVs, int document, std::string_view property) {
-    return emitItemEdge(nextId++, outV, inVs, document, property);
+int Writer::emitItemEdge(int outV, const std::vector<int> &inVs, int shard, std::string_view property) {
+    return emitItemEdge(nextId++, outV, inVs, shard, property);
 }
 
-int Writer::emitItemEdge(int outV, int inV, int document, std::string_view property) {
-    return emitItemEdge(nextId++, outV, std::vector<int>{inV}, document, property);
+int Writer::emitItemEdge(int outV, int inV, int shard, std::string_view property) {
+    return emitItemEdge(nextId++, outV, std::vector<int>{inV}, shard, property);
 }
 
 int Writer::emitHoverResult(std::string_view kind, std::string_view value) {
     return emitHoverResult(nextId++, kind, value);
+}
+
+int Writer::emitGroup(std::string_view uri, std::string_view conflictResolution, std::string_view name,
+                      std::string_view rootUri) {
+    return emitGroup(nextId++, uri, conflictResolution, name, rootUri);
 }
 
 int Writer::emitEdge(int id, std::string_view label, int outV, int inV) {
@@ -294,7 +299,7 @@ int Writer::emitMetaData(int id, std::string_view version, std::string_view proj
     return id;
 }
 
-int Writer::emitItemEdge(int id, int outV, const std::vector<int> &inVs, int document, std::string_view property) {
+int Writer::emitItemEdge(int id, int outV, const std::vector<int> &inVs, int shard, std::string_view property) {
     rapidjson::OStreamWrapper osw{outputStream};
     rapidjson::Writer writer{osw};
 
@@ -318,8 +323,8 @@ int Writer::emitItemEdge(int id, int outV, const std::vector<int> &inVs, int doc
     }
     writer.EndArray();
 
-    writer.String("document");
-    writer.Int(document);
+    writer.String("shard");
+    writer.Int(shard);
 
     if (!property.empty()) {
         writer.String("property");
@@ -364,6 +369,40 @@ int Writer::emitHoverResult(int id, std::string_view kind, std::string_view valu
 
     writer.EndObject();
     writer.EndObject();
+    writer.EndObject();
+    outputStream.put('\n');
+    outputStream.flush();
+
+    return id;
+}
+
+int Writer::emitGroup(int id, std::string_view uri, std::string_view conflictResolution, std::string_view name,
+                      std::string_view rootUri) {
+    rapidjson::OStreamWrapper osw{outputStream};
+    rapidjson::Writer writer{osw};
+
+    writer.StartObject();
+    writer.String("id");
+    writer.Int(id);
+
+    writer.String("type");
+    writer.String("vertex");
+
+    writer.String("label");
+    writer.String("group");
+
+    writer.String("uri");
+    writer.String(uri.data());
+
+    writer.String("conflictResolution");
+    writer.String(conflictResolution.data());
+
+    writer.String("name");
+    writer.String(name.data());
+
+    writer.String("rootUri");
+    writer.String(rootUri.data());
+
     writer.EndObject();
     outputStream.put('\n');
     outputStream.flush();
