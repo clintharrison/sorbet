@@ -1019,6 +1019,9 @@ core::TypePtr Environment::processBinding(core::Context ctx, const cfg::CFG &inW
 #ifndef SORBET_REALMAIN_MIN
                 if (ctx.state.lsifWriter) {
                     // lay. zeee.
+                    if (!retainedResult) {
+                        retainedResult = make_shared<core::DispatchResult>(std::move(dispatched));
+                    }
                     sorbet::realmain::lsif::Indexer::emitForSend(ctx, bind.loc, retainedResult, send->fun);
                 }
 #endif
@@ -1046,14 +1049,6 @@ core::TypePtr Environment::processBinding(core::Context ctx, const cfg::CFG &inW
                         ctx, core::lsp::IdentResponse(core::Loc(ctx.file, bind.loc), i->what.data(inWhat), tp,
                                                       ctx.owner.asMethodRef()));
                 }
-#ifndef SORBET_REALMAIN_MIN
-            // if (ctx.state.lsifWriter && !bind.value->isSynthetic) {
-            //     ctx.state.lsifWriter->emitForLSPQueryResponse(
-            //         ctx, core::lsp::IdentResponse(core::Loc(ctx.file, bind.loc), i->what.data(inWhat), tp,
-            //                                       ctx.owner.asMethodRef()));
-            // }
-#endif
-
                 ENFORCE(ctx.file.data(ctx).hasParseErrors || !tp.origins.empty(), "Inferencer did not assign location");
             },
             [&](cfg::Alias *a) {

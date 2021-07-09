@@ -558,6 +558,11 @@ ast::ParsedFile typecheckOne(core::Context ctx, ast::ParsedFile resolved, const 
     if (f.data(ctx).isRBI()) {
         return result;
     }
+#ifndef SORBET_REALMAIN_MIN
+    if (ctx.state.lsifWriter) {
+        sorbet::realmain::lsif::Indexer::emitForDocumentBegin(ctx, f);
+    }
+#endif
 
     Timer timeit(ctx.state.tracer(), "typecheckOne", {{"file", (string)f.data(ctx).path()}});
     try {
@@ -583,6 +588,11 @@ ast::ParsedFile typecheckOne(core::Context ctx, ast::ParsedFile resolved, const 
         if (opts.print.CFGRaw.enabled) {
             opts.print.CFGRaw.fmt("}}\n\n");
         }
+#ifndef SORBET_REALMAIN_MIN
+        if (ctx.state.lsifWriter) {
+            sorbet::realmain::lsif::Indexer::emitForDocumentEnd(ctx, f);
+        }
+#endif
     } catch (SorbetException &) {
         Exception::failInFuzzer();
         if (auto e = ctx.state.beginError(sorbet::core::Loc::none(f), core::errors::Internal::InternalError)) {
@@ -814,6 +824,11 @@ ast::ParsedFilesOrCancelled typecheck(unique_ptr<core::GlobalState> &gs, vector<
                 return lhs.file.data(*gs).source().size() > rhs.file.data(*gs).source().size();
             });
         }
+#ifndef SORBET_REALMAIN_MIN
+        if (opts.print.LSIF.enabled) {
+            lsif::Indexer::emitForProjectBegin(*gs);
+        }
+#endif
 
         for (auto &resolved : what) {
             fileq->push(move(resolved), 1);
@@ -1038,6 +1053,10 @@ ast::ParsedFilesOrCancelled typecheck(unique_ptr<core::GlobalState> &gs, vector<
             if (mpack_writer_destroy(&writer)) {
                 Exception::raise("failed to write msgpack");
             }
+        }
+
+        if (opts.print.LSIF.enabled) {
+            lsif::Indexer::emitForProjectEnd(*gs);
         }
 #endif
         // Error queue is re-used across runs, so reset the flush count to ignore files flushed during typecheck.

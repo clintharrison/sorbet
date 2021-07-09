@@ -2,11 +2,11 @@
 extend T::Sig
 
 sig {returns(String)}
-def bar
-  "hello world"
+def run
+  "1.2.3"
 end
 
 sig {returns(String)}
-def foo
-  bar
+def inferModuleVersion
+  run
 end
