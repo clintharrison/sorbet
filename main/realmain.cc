@@ -498,9 +498,6 @@ int realmain(int argc, char *argv[]) {
         }
     }
     gs->suggestUnsafe = opts.suggestUnsafe;
-    if (opts.print.LSIF.enabled) {
-        gs->lsifWriter = make_unique<sorbet::core::lsif::Writer>();
-    }
 
     logger->trace("done building initial global state");
 

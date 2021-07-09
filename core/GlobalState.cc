@@ -155,15 +155,16 @@ atomic<int> globalStateIdCounter(1);
 const int Symbols::MAX_PROC_ARITY;
 
 GlobalState::GlobalState(shared_ptr<ErrorQueue> errorQueue)
-    : GlobalState(move(errorQueue), make_shared<lsp::TypecheckEpochManager>()) {}
-
-GlobalState::GlobalState(shared_ptr<ErrorQueue> errorQueue, shared_ptr<lsp::TypecheckEpochManager> epochManager)
-    : GlobalState(move(errorQueue), move(epochManager), globalStateIdCounter.fetch_add(1)) {}
+    : GlobalState(move(errorQueue), make_shared<lsp::TypecheckEpochManager>(), make_shared<lsif::Writer>()) {}
 
 GlobalState::GlobalState(shared_ptr<ErrorQueue> errorQueue, shared_ptr<lsp::TypecheckEpochManager> epochManager,
-                         int globalStateId)
+                         shared_ptr<lsif::Writer> lsifWriter)
+    : GlobalState(move(errorQueue), move(epochManager), move(lsifWriter), globalStateIdCounter.fetch_add(1)) {}
+
+GlobalState::GlobalState(shared_ptr<ErrorQueue> errorQueue, shared_ptr<lsp::TypecheckEpochManager> epochManager,
+                         shared_ptr<lsif::Writer> lsifWriter, int globalStateId)
     : globalStateId(globalStateId), errorQueue(std::move(errorQueue)), lspQuery(lsp::Query::noQuery()),
-      epochManager(move(epochManager)) {
+      epochManager(move(epochManager)), lsifWriter(move(lsifWriter)) {
     // Reserve memory in internal vectors for the contents of payload.
     utf8Names.reserve(PAYLOAD_MAX_UTF8_NAME_COUNT);
     constantNames.reserve(PAYLOAD_MAX_CONSTANT_NAME_COUNT);
@@ -184,7 +185,7 @@ unique_ptr<GlobalState> GlobalState::makeEmptyGlobalStateForHashing(spdlog::logg
     // Note: Private constructor.
     unique_ptr<GlobalState> rv(
         new GlobalState(make_shared<core::ErrorQueue>(logger, logger, make_shared<core::NullFlusher>()),
-                        make_shared<lsp::TypecheckEpochManager>(), -1));
+                        make_shared<lsp::TypecheckEpochManager>(), make_shared<lsif::Writer>(), -1));
     rv->initEmpty();
     rv->silenceErrors = true;
     return rv;
@@ -1668,7 +1669,7 @@ bool GlobalState::unfreezeSymbolTable() {
 unique_ptr<GlobalState> GlobalState::deepCopy(bool keepId) const {
     Timer timeit(tracer(), "GlobalState::deepCopy", this->creation);
     this->sanityCheck();
-    auto result = make_unique<GlobalState>(this->errorQueue, this->epochManager);
+    auto result = make_unique<GlobalState>(this->errorQueue, this->epochManager, this->lsifWriter);
 
     result->silenceErrors = this->silenceErrors;
     result->autocorrect = this->autocorrect;

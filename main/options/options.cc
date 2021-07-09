@@ -70,7 +70,7 @@ const vector<PrintOptions> print_options({
     {"autogen-autoloader", &Printers::AutogenAutoloader, true, false},
     {"autogen-subclasses", &Printers::AutogenSubclasses, true},
     {"package-tree", &Printers::Packager},
-    {"lsif", &Printers::LSIF, true},
+    {"lsif", &Printers::LSIF, false},
 });
 
 PrinterConfig::PrinterConfig() : state(make_shared<GuardedState>()){};

@@ -59,11 +59,12 @@ class GlobalState final {
     // Private constructor that allows a specific globalStateId. Used in `makeEmptyGlobalStateForHashing` to avoid
     // contention on the global state ID atomic.
     GlobalState(std::shared_ptr<ErrorQueue> errorQueue, std::shared_ptr<lsp::TypecheckEpochManager> epochManager,
-                int globalStateId);
+                std::shared_ptr<lsif::Writer> lsifWriter, int globalStateId);
 
 public:
     GlobalState(std::shared_ptr<ErrorQueue> errorQueue);
-    GlobalState(std::shared_ptr<ErrorQueue> errorQueue, std::shared_ptr<lsp::TypecheckEpochManager> epochManager);
+    GlobalState(std::shared_ptr<ErrorQueue> errorQueue, std::shared_ptr<lsp::TypecheckEpochManager> epochManager,
+                std::shared_ptr<lsif::Writer> lsifWriter);
 
     // Creates an empty global state for hashing. Bypasses important sanity checks that are used for other types of
     // global states.
@@ -268,7 +269,7 @@ public:
 
     bool requiresAncestorEnabled = false;
 
-    std::unique_ptr<sorbet::core::lsif::Writer> lsifWriter;
+    std::shared_ptr<sorbet::core::lsif::Writer> lsifWriter;
 
 private:
     bool shouldReportErrorOn(Loc loc, ErrorClass what) const;
