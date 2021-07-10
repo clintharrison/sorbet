@@ -50,8 +50,8 @@ class Writer {
     int emitVertex(int id, std::string_view label);
     int emitNextEdge(int id, int outV, int inV);
     int emitRange(int id, sorbet::core::Loc::Detail start, sorbet::core::Loc::Detail end);
-    int emitDocument(int id, std::string_view language, std::string_view uri);
-    int emitProject(int id, std::string_view language);
+    int emitDocument(int id, std::string_view language, std::string_view uri, std::string_view contents);
+    int emitProject(int id, std::string_view language, std::string_view name);
     int emitContains(int id, int outV, const std::vector<int> &inVs);
     int emitMetaData(int id, std::string_view version, std::string_view projectRoot, std::string_view toolName);
     int emitEdge(int id, std::string_view label, int outV, int inV);
@@ -70,8 +70,8 @@ public:
     int emitVertex(std::string_view label);
     int emitNextEdge(int outV, int inV);
     int emitRange(sorbet::core::Loc::Detail start, sorbet::core::Loc::Detail end);
-    int emitDocument(std::string_view language, std::string_view uri);
-    int emitProject(std::string_view language);
+    int emitDocument(std::string_view language, std::string_view uri, std::string_view contents = {});
+    int emitProject(std::string_view language, std::string_view name);
     int emitContains(int outV, const std::vector<int> &inVs);
     int emitMetaData(std::string_view version, std::string_view projectRoot, std::string_view toolName);
     int emitItemEdge(int outV, const std::vector<int> &inVs, int shard, std::string_view property = {});

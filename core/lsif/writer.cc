@@ -1,4 +1,5 @@
 #include "core/lsif/writer.h"
+#include "absl/strings/escaping.h"
 #include "rapidjson/ostreamwrapper.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/writer.h"
@@ -33,16 +34,16 @@ int Writer::emitContains(int outV, const std::vector<int> &inVs) {
     return emitContains(nextId++, outV, inVs);
 }
 
-int Writer::emitProject(std::string_view language) {
-    return emitProject(nextId++, language);
+int Writer::emitProject(std::string_view language, std::string_view name) {
+    return emitProject(nextId++, language, name);
 }
 
 int Writer::emitRange(sorbet::core::Loc::Detail start, sorbet::core::Loc::Detail end) {
     return emitRange(nextId++, start, end);
 }
 
-int Writer::emitDocument(std::string_view language, std::string_view uri) {
-    return emitDocument(nextId++, language, uri);
+int Writer::emitDocument(std::string_view language, std::string_view uri, std::string_view contents) {
+    return emitDocument(nextId++, language, uri, contents);
 }
 
 int Writer::emitMetaData(std::string_view version, std::string_view projectRoot, std::string_view toolName) {
@@ -178,7 +179,7 @@ int Writer::emitContains(int id, int outV, const std::vector<int> &inVs) {
     return id;
 }
 
-int Writer::emitProject(int id, std::string_view language) {
+int Writer::emitProject(int id, std::string_view language, std::string_view name) {
     rapidjson::OStreamWrapper osw{outputStream};
     rapidjson::Writer writer{osw};
 
@@ -194,6 +195,9 @@ int Writer::emitProject(int id, std::string_view language) {
 
     writer.String("kind");
     writer.String(language.data());
+
+    writer.String("name");
+    writer.String(name.data());
 
     writer.EndObject();
     outputStream.put('\n');
@@ -239,7 +243,7 @@ int Writer::emitRange(int id, sorbet::core::Loc::Detail start, sorbet::core::Loc
     return id;
 }
 
-int Writer::emitDocument(int id, std::string_view language, std::string_view uri) {
+int Writer::emitDocument(int id, std::string_view language, std::string_view uri, std::string_view contents) {
     rapidjson::OStreamWrapper osw{outputStream};
     rapidjson::Writer writer{osw};
 
@@ -258,6 +262,9 @@ int Writer::emitDocument(int id, std::string_view language, std::string_view uri
 
     writer.String("languageId");
     writer.String(language.data());
+
+    writer.String("contents");
+    writer.String(absl::Base64Escape(contents));
 
     writer.EndObject();
     outputStream.put('\n');

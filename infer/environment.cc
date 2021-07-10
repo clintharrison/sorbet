@@ -1049,6 +1049,13 @@ core::TypePtr Environment::processBinding(core::Context ctx, const cfg::CFG &inW
                         ctx, core::lsp::IdentResponse(core::Loc(ctx.file, bind.loc), i->what.data(inWhat), tp,
                                                       ctx.owner.asMethodRef()));
                 }
+#ifndef SORBET_REALMAIN_MIN
+                if (ctx.state.lsifWriter) {
+                    sorbet::realmain::lsif::Indexer::emitForIdent(
+                        ctx, core::lsp::IdentResponse(core::Loc(ctx.file, bind.loc), i->what.data(inWhat), tp,
+                                                      ctx.owner.asMethodRef()));
+                }
+#endif
                 ENFORCE(ctx.file.data(ctx).hasParseErrors || !tp.origins.empty(), "Inferencer did not assign location");
             },
             [&](cfg::Alias *a) {

@@ -3,6 +3,7 @@
 
 #include "ast/ast.h"
 #include "core/core.h"
+#include "core/lsp/QueryResponse.h"
 
 namespace sorbet::realmain::lsif {
 class Indexer {
@@ -12,6 +13,7 @@ public:
     static void emitForMethodDef(core::Context ctx, const ast::ExpressionPtr &tree);
     static void emitForSend(core::Context ctx, sorbet::core::LocOffsets loc,
                             std::shared_ptr<core::DispatchResult> dispatchResult, core::NameRef callerSideName);
+    static void emitForIdent(core::Context ctx, const core::lsp::IdentResponse identResponse);
     static void emitForProjectBegin(const core::GlobalState &gs);
     static void emitForProjectEnd(const core::GlobalState &gs);
 };

@@ -6,7 +6,8 @@ void Indexer::emitForDocumentBegin(core::Context ctx, core::FileRef file) {
     const auto &gs = ctx.state;
     // this is gross, but we need to modify the state now :(
     absl::MutexLock lock{&gs.lsifWriter->outputLock};
-    auto id = gs.lsifWriter->emitDocument("ruby", fmt::format("file:///{}", file.data(gs).path()));
+    auto id =
+        gs.lsifWriter->emitDocument("ruby", fmt::format("file:///{}", file.data(gs).path()), file.data(gs).source());
     auto docInfo = std::make_unique<core::lsif::DocumentInfo>(id);
     gs.lsifWriter->documentInfoForFile.emplace(ctx.file, std::move(docInfo));
 }
@@ -96,6 +97,22 @@ void Indexer::emitForSend(core::Context ctx, sorbet::core::LocOffsets loc,
     defInfo.referenceRangeIds[docInfo->documentId].push_back(range);
 }
 
+void Indexer::emitForIdent(core::Context ctx, const core::lsp::IdentResponse identResponse) {
+    const auto &gs = ctx.state;
+    // there were some <self>s without locs?
+    if (!identResponse.termLoc.exists()) {
+        return;
+    }
+    // some <selfRestore> I don't think we need for LSIF? it's not a very sophisticated graph
+    if (identResponse.variable._name == core::Names::selfRestore()) {
+        return;
+    }
+
+    // auto &writer = *gs.lsifWriter;
+    fmt::print("visiting ident {} (at {})\n", identResponse.variable._name.show(gs),
+               identResponse.termLoc.filePosToString(gs, true));
+}
+
 void Indexer::emitForProjectBegin(const core::GlobalState &gs) {
     ENFORCE(gs.lsifWriter);
     // this is gross, but we need to modify the state now :(
@@ -106,10 +123,10 @@ void Indexer::emitForProjectBegin(const core::GlobalState &gs) {
     ENFORCE(metaDataId == 1);
 
     // TODO: stop hardcoding these: uri, conflict resolution, project name, root URI
-    auto groupId = gs.lsifWriter->emitGroup("file:///", "takeDB", "<TODO NAME>", "file:///");
+    auto groupId = gs.lsifWriter->emitGroup("file:///", "takeDB", "<TODO GROUP NAME>", "file:///");
     ENFORCE(groupId == 2)
 
-    auto projectId = gs.lsifWriter->emitProject("ruby");
+    auto projectId = gs.lsifWriter->emitProject("ruby", "<TODO PROJECT NAME>");
     ENFORCE(projectId == 3);
 
     gs.lsifWriter->emitEdge("belongsTo", projectId, groupId);
