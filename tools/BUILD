@@ -131,6 +131,7 @@ compilation_database(
         "//third_party/licenses:licenses",
         "//third_party/progressbar:progressbar",
         "//third_party/xxd:xxd",
+        "//kythe:sorbet",
         # END compile_commands targets
     ],
 )
